@@ -1,0 +1,29 @@
+{
+  "name": "sat-practice-platform",
+  "version": "1.0.0",
+  "description": "Full-stack SAT practice platform",
+  "scripts": {
+    "install:all": "npm install && cd backend && npm install && cd ../frontend && npm install",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "cd backend && npm run dev",
+    "dev:frontend": "cd frontend && npm start",
+    "build": "cd frontend && npm run build",
+    "db:generate": "cd backend && npm run db:generate",
+    "db:push": "cd backend && npm run db:push",
+    "db:seed": "cd backend && npm run db:seed",
+    "setup": "./setup.sh"
+  },
+  "devDependencies": {
+    "concurrently": "^8.2.2"
+  },
+  "keywords": [
+    "sat",
+    "practice",
+    "education",
+    "react",
+    "nodejs",
+    "postgresql"
+  ],
+  "author": "",
+  "license": "MIT"
+} 

@@ -1,0 +1,39 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Question {
+  id            String   @id @default(cuid())
+  questionId    String   @unique // The original ID from the JSON
+  program       String
+  section       String   // "Math" or "Reading and Writing"
+  domain        String   // "Algebra", "Geometry", etc.
+  skill         String   // Specific skill description
+  difficulty    Int      // 1, 2, 3 for Easy, Medium, Hard
+  type          String   // "multiple-choice" or "grid-in"
+  
+  // Question content
+  paragraph     String?  @db.Text
+  questionText  String   @db.Text
+  choices       String[] // Array of choice options for multiple choice
+  correctAnswer String[] // Array of correct answers
+  explanation   String?  @db.Text
+  
+  // Visual content
+  visualType    String?
+  svgContent    String?  @db.Text
+  imageUrl      String?
+  
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@map("questions")
+} 
