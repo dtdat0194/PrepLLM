@@ -2,57 +2,62 @@
 
 A comprehensive full-stack SAT practice platform built with React, Node.js, Express, and SQLite. Features advanced question filtering, LaTeX math rendering, and a modern responsive interface.
 
-## 🚀 Features
+## Features
 
-- **📚 Question Bank**: Comprehensive SAT question database
-- **🔍 Advanced Filtering**: Filter by section, domain, skill, difficulty, and type
-- **📱 Responsive Design**: Works on desktop, tablet, and mobile
-- **🎨 Modern UI**: Clean, intuitive interface with Tailwind CSS
-- **⚡ Fast Performance**: Optimized for quick question loading
-- **🔧 Easy Setup**: Simple installation and configuration
+- **Question Bank**: Comprehensive SAT question database with 2000+ questions
+- **Advanced Filtering**: Filter by section, domain, skill, difficulty, and type
+- **Responsive Design**: Works on desktop, tablet, and mobile
+- **Modern UI**: Clean, intuitive interface with Tailwind CSS
+- **LaTeX Math Rendering**: KaTeX for mathematical expressions
+- **Fast Performance**: Optimized for quick question loading
+- **Easy Setup**: Simple installation and configuration
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-- **Frontend**: React, Tailwind CSS, Axios
+- **Frontend**: React 19, Tailwind CSS, KaTeX, Axios
 - **Backend**: Node.js, Express, Prisma ORM
 - **Database**: SQLite (file-based, no server required)
 - **Development**: Hot reloading, development tools
 
-## 📋 Prerequisites
+## Prerequisites
 
-- **Node.js** (v14 or higher)
+- **Node.js** (v18 or higher)
 - **npm** (comes with Node.js)
+- **Python 3.8+** (for data processing)
+- **Conda** (optional, for Python environment)
 - **Git** (for cloning the repository)
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Clone and Setup
+### Windows Development
+```cmd
+# Navigate to the project directory
+cd sat-practice-app
 
+# Run the automated development startup script
+setup\windows\start_dev.bat
+```
+
+### Linux/Mac Development
 ```bash
-# Clone the repository
-git clone <repository-url>
+# Navigate to the project directory
 cd sat-practice-app
 
 # Run the setup script
-chmod +x setup.sh
-./setup.sh
+./setup/unix/setup.sh
+
+# Start the application
+./setup/unix/start.sh
 ```
 
-### 2. Start the Application
-
-```bash
-# Start both frontend and backend servers
-chmod +x start.sh
-./start.sh
-```
-
-### 3. Access the App
+### Access the App
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5001
 - **Database**: SQLite file (backend/dev.db)
+- **Prisma Studio**: http://localhost:5555 (optional)
 
-## 📊 Database Setup
+## Database Setup
 
 The app uses SQLite, which is automatically configured during setup:
 
@@ -63,10 +68,9 @@ cd backend
 npm run db:seed
 ```
 
-## 🛠️ Development
+## Development
 
 ### Backend Development
-
 ```bash
 cd backend
 npm run dev          # Start with nodemon (auto-restart)
@@ -76,17 +80,35 @@ npm run db:seed      # Seed database with questions
 ```
 
 ### Frontend Development
-
 ```bash
 cd frontend
 npm start            # Start development server
 npm run build        # Build for production
 ```
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 sat-practice-app/
+├── data/                    # Data processing files
+│   ├── convertJSON.py      # Question processing script
+│   ├── cb-digital-questions.json  # Original questions (24MB)
+│   └── cleaned_questions_full.json # Processed questions (7.5MB)
+├── setup/                   # All setup and configuration files
+│   ├── windows/            # Windows-specific scripts
+│   │   ├── start_dev.bat   # Windows development startup
+│   │   ├── stop_dev.bat    # Windows development stop
+│   │   ├── start.bat       # Windows production startup
+│   │   ├── install-prerequisites.bat
+│   │   └── troubleshoot.bat
+│   ├── unix/               # Unix/Linux/Mac scripts
+│   │   ├── setup.sh        # Unix setup script
+│   │   ├── start.sh        # Unix start script
+│   │   └── stop.sh         # Unix stop script
+│   └── docs/               # Documentation
+│       ├── README-DEV.md   # Development guide
+│       ├── README-Windows.md # Windows setup guide
+│       └── README.md       # Setup documentation
 ├── backend/                 # Node.js/Express API
 │   ├── src/
 │   │   ├── controllers/    # API controllers
@@ -102,12 +124,12 @@ sat-practice-app/
 │   │   ├── pages/         # Page components
 │   │   └── api/           # API client
 │   └── public/            # Static assets
-├── setup.sh               # Setup script
-├── start.sh               # Start script
-└── stop.sh                # Stop script
+├── README.md              # Main documentation
+├── TECHNICAL.md           # Technical documentation
+└── .gitignore             # Git ignore file
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -122,12 +144,33 @@ PORT=5001
 REACT_APP_API_URL=http://localhost:5001/api
 ```
 
-## 🚀 Deployment
+## API Endpoints
+
+### Core Endpoints
+- `GET /api/health` - Health check
+- `GET /api/questions` - Get questions with filters
+- `GET /api/questions/:id` - Get single question
+- `GET /api/questions/questionId/:questionId` - Get by question ID
+- `GET /api/questions/filters` - Get available filters
+
+### Query Parameters
+- `section`: "Math" or "Reading and Writing"
+- `domain`: Specific domain (e.g., "Algebra", "Geometry")
+- `skill`: Specific skill description
+- `difficulty`: 1 (Easy), 2 (Medium), 3 (Hard)
+- `type`: "multiple-choice" or "grid-in"
+- `limit`: Number of questions per page (default: 50)
+- `offset`: Pagination offset (default: 0)
+
+## Deployment
 
 ### Local Development
 ```bash
-./start.sh    # Start both servers
-./stop.sh     # Stop both servers
+# Windows
+setup\windows\start_dev.bat
+
+# Unix/Linux/Mac
+./setup/unix/start.sh
 ```
 
 ### Production
@@ -141,14 +184,19 @@ cd backend
 npm start
 ```
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
 1. **Port already in use**
    ```bash
-   ./stop.sh  # Stop all servers
-   ./start.sh # Restart
+   # Windows
+   setup\windows\stop_dev.bat
+   setup\windows\start_dev.bat
+   
+   # Unix
+   ./setup/unix/stop.sh
+   ./setup/unix/start.sh
    ```
 
 2. **Database issues**
@@ -165,15 +213,19 @@ npm start
    cd ../frontend && npm install
    ```
 
-## 📝 API Endpoints
+4. **Data processing issues**
+   ```bash
+   cd data
+   python convertJSON.py
+   ```
 
-- `GET /api/health` - Health check
-- `GET /api/questions` - Get questions with filters
-- `GET /api/questions/:id` - Get single question
-- `GET /api/questions/questionId/:questionId` - Get by question ID
-- `GET /api/questions/filters` - Get available filters
+## Documentation
 
-## 🤝 Contributing
+- **[TECHNICAL.md](TECHNICAL.md)**: Comprehensive technical documentation
+- **[setup/docs/README-DEV.md](setup/docs/README-DEV.md)**: Development guide
+- **[setup/docs/README-Windows.md](setup/docs/README-Windows.md)**: Windows setup guide
+
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch
@@ -181,10 +233,10 @@ npm start
 4. Test thoroughly
 5. Submit a pull request
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License.
 
 ---
 
-**Happy coding! 🎉** 
+**Happy coding!** 
