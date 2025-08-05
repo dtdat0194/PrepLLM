@@ -17,8 +17,8 @@ const getQuestions = async (req, res) => {
     
     if (skill) {
       where.skill = {
-        contains: skill,
-        mode: 'insensitive'
+        contains: skill
+        // SQLite doesn't support 'mode: insensitive' - we'll handle case sensitivity in the query
       };
     }
     
@@ -41,10 +41,17 @@ const getQuestions = async (req, res) => {
       }
     });
     
+    // Parse JSON strings back to arrays for frontend
+    const processedQuestions = questions.map(question => ({
+      ...question,
+      choices: JSON.parse(question.choices || '[]'),
+      correctAnswer: JSON.parse(question.correctAnswer || '[]')
+    }));
+    
     const total = await prisma.question.count({ where });
     
     res.json({
-      questions: questions,
+      questions: processedQuestions,
       pagination: {
         page: parseInt(page),
         limit: parseInt(limit),
@@ -71,7 +78,14 @@ const getQuestionById = async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
     
-    res.json(question);
+    // Parse JSON strings back to arrays
+    const processedQuestion = {
+      ...question,
+      choices: JSON.parse(question.choices || '[]'),
+      correctAnswer: JSON.parse(question.correctAnswer || '[]')
+    };
+    
+    res.json(processedQuestion);
   } catch (error) {
     console.error('Error fetching question:', error);
     res.status(500).json({ error: 'Failed to fetch question' });
@@ -91,7 +105,14 @@ const getQuestionByQuestionId = async (req, res) => {
       return res.status(404).json({ error: 'Question not found' });
     }
     
-    res.json(question);
+    // Parse JSON strings back to arrays
+    const processedQuestion = {
+      ...question,
+      choices: JSON.parse(question.choices || '[]'),
+      correctAnswer: JSON.parse(question.correctAnswer || '[]')
+    };
+    
+    res.json(processedQuestion);
   } catch (error) {
     console.error('Error fetching question:', error);
     res.status(500).json({ error: 'Failed to fetch question' });
@@ -159,6 +180,10 @@ const bulkLoadQuestions = async (req, res) => {
           continue; // Skip if already exists
         }
         
+        // Convert arrays to JSON strings for SQLite
+        const choicesJson = JSON.stringify(questionData.question.choices || []);
+        const correctAnswerJson = JSON.stringify(questionData.question.correct_answer || []);
+        
         // Create question with new structure
         const question = await prisma.question.create({
           data: {
@@ -171,8 +196,8 @@ const bulkLoadQuestions = async (req, res) => {
             type: questionData.type,
             paragraph: questionData.question.paragraph,
             questionText: questionData.question.question,
-            choices: questionData.question.choices || [],
-            correctAnswer: questionData.question.correct_answer || [],
+            choices: choicesJson,
+            correctAnswer: correctAnswerJson,
             explanation: questionData.question.explanation,
             visualType: questionData.visuals.type,
             svgContent: questionData.visuals.svg_content,
@@ -205,4 +230,4 @@ module.exports = {
   getQuestionByQuestionId,
   getFilters,
   bulkLoadQuestions
-}; 
+};

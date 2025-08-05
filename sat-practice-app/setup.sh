@@ -1,54 +1,69 @@
 #!/bin/bash
 
-echo "🚀 Setting up SAT Practice Platform..."
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+echo "🚀 Setting up SAT Practice App..."
 
 # Check if Node.js is installed
 if ! command -v node &> /dev/null; then
-    echo "❌ Node.js is not installed. Please install Node.js first."
+    echo -e "${RED}❌ Node.js is not installed. Please install Node.js first.${NC}"
     exit 1
 fi
 
-# Check if PostgreSQL is running
-if ! pg_isready -q; then
-    echo "❌ PostgreSQL is not running. Please start PostgreSQL first."
+echo -e "${GREEN}✅ Node.js is installed${NC}"
+
+# Check if npm is installed
+if ! command -v npm &> /dev/null; then
+    echo -e "${RED}❌ npm is not installed. Please install npm first.${NC}"
     exit 1
 fi
 
-echo "📦 Setting up backend..."
+echo -e "${GREEN}✅ npm is installed${NC}"
+
+# Install backend dependencies
+echo "📦 Installing backend dependencies..."
 cd backend
-
-# Install dependencies
 npm install
 
-# Create .env file if it doesn't exist
+# Create .env file for backend
 if [ ! -f .env ]; then
-    echo "Creating .env file..."
-    cat > .env << EOF
-DATABASE_URL="postgresql://postgres:password@localhost:5432/sat_practice_db"
-PORT=5000
-NODE_ENV=development
-EOF
-    echo "⚠️  Please update the DATABASE_URL in backend/.env with your PostgreSQL credentials"
+    echo "📝 Creating .env file for backend..."
+    echo "DATABASE_URL=\"file:./dev.db\"" > .env
+    echo "PORT=5001" >> .env
+    echo -e "${GREEN}✅ Created .env file with SQLite configuration${NC}"
+else
+    echo -e "${YELLOW}⚠️  .env file already exists. Please make sure DATABASE_URL is set to: file:./dev.db${NC}"
 fi
 
 # Generate Prisma client
-npm run db:generate
+echo "🔧 Generating Prisma client..."
+npx prisma generate
 
-# Push database schema
-npm run db:push
+# Push schema to database (creates SQLite database)
+echo "🗄️  Setting up SQLite database..."
+npx prisma db push
 
-echo "📦 Setting up frontend..."
+# Install frontend dependencies
+echo "📦 Installing frontend dependencies..."
 cd ../frontend
-
-# Install dependencies
 npm install
 
-echo "✅ Setup complete!"
+# Create .env file for frontend
+if [ ! -f .env ]; then
+    echo "📝 Creating .env file for frontend..."
+    echo "REACT_APP_API_URL=http://localhost:5001/api" > .env
+    echo -e "${GREEN}✅ Created .env file for frontend${NC}"
+else
+    echo -e "${YELLOW}⚠️  .env file already exists in frontend${NC}"
+fi
+
+echo -e "${GREEN}✅ Setup completed successfully!${NC}"
 echo ""
-echo "Next steps:"
-echo "1. Update the DATABASE_URL in backend/.env with your PostgreSQL credentials"
-echo "2. Start the backend: cd backend && npm run dev"
-echo "3. Start the frontend: cd frontend && npm start"
-echo "4. Load questions by clicking 'Load Questions' in the app"
-echo ""
-echo "🎉 Happy coding!" 
+echo "🎯 Next steps:"
+echo "1. Run the application with: ./start.sh"
+echo "2. Seed the database with: cd backend && npm run db:seed"
+echo "3. Access the app at: http://localhost:3000" 

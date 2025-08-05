@@ -1,13 +1,5 @@
 #!/bin/bash
 
-# SAT Practice Platform - Complete Startup Script
-# This script sets up and starts the entire SAT practice platform
-
-set -e  # Exit on any error
-
-echo "🚀 Starting SAT Practice Platform..."
-echo "=================================="
-
 # Colors for output
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -16,248 +8,163 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Function to print colored output
-print_status() {
-    echo -e "${BLUE}[INFO]${NC} $1"
-}
-
 print_success() {
-    echo -e "${GREEN}[SUCCESS]${NC} $1"
-}
-
-print_warning() {
-    echo -e "${YELLOW}[WARNING]${NC} $1"
+    echo -e "${GREEN}✅ $1${NC}"
 }
 
 print_error() {
-    echo -e "${RED}[ERROR]${NC} $1"
+    echo -e "${RED}❌ $1${NC}"
 }
 
-# Check if we're in the right directory
-if [ ! -f "package.json" ] || [ ! -d "backend" ] || [ ! -d "frontend" ]; then
-    print_error "Please run this script from the sat-practice-app directory"
-    exit 1
-fi
+print_warning() {
+    echo -e "${YELLOW}⚠️  $1${NC}"
+}
 
-# Check prerequisites
-print_status "Checking prerequisites..."
+print_info() {
+    echo -e "${BLUE}ℹ️  $1${NC}"
+}
 
-# Check Node.js
+echo "🚀 Starting SAT Practice App..."
+
+# Check if Node.js is installed
 if ! command -v node &> /dev/null; then
     print_error "Node.js is not installed. Please install Node.js first."
     exit 1
 fi
 
-# Check npm
+print_success "Node.js is installed"
+
+# Check if npm is installed
 if ! command -v npm &> /dev/null; then
     print_error "npm is not installed. Please install npm first."
     exit 1
 fi
 
-# Check PostgreSQL
-if ! command -v psql &> /dev/null; then
-    print_error "PostgreSQL is not installed. Please install PostgreSQL first."
+print_success "npm is installed"
+
+# Check if backend directory exists
+if [ ! -d "backend" ]; then
+    print_error "Backend directory not found. Please run setup.sh first."
     exit 1
 fi
 
-# Check if PostgreSQL is running
-if ! pg_isready -q; then
-    print_error "PostgreSQL is not running. Please start PostgreSQL first."
+# Check if frontend directory exists
+if [ ! -d "frontend" ]; then
+    print_error "Frontend directory not found. Please run setup.sh first."
     exit 1
 fi
 
-print_success "All prerequisites are satisfied!"
-
-# Kill any existing processes
-print_status "Stopping any existing processes..."
-pkill -f "react-scripts" 2>/dev/null || true
-pkill -f "nodemon" 2>/dev/null || true
-pkill -f "node.*app.js" 2>/dev/null || true
-
-# Kill processes on ports 3000 and 5001
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:5001 | xargs kill -9 2>/dev/null || true
-
-print_success "Stopped existing processes"
-
-# Database setup
-print_status "Setting up database..."
-
-# Create database if it doesn't exist
-if ! psql -lqt | cut -d \| -f 1 | grep -qw sat_practice_db; then
-    print_status "Creating database..."
-    createdb sat_practice_db
-    print_success "Database created"
-else
-    print_status "Database already exists"
+# Check if backend dependencies are installed
+if [ ! -d "backend/node_modules" ]; then
+    print_warning "Backend dependencies not installed. Installing now..."
+    cd backend
+    npm install
+    cd ..
 fi
 
-# Backend setup
-print_status "Setting up backend..."
+# Check if frontend dependencies are installed
+if [ ! -d "frontend/node_modules" ]; then
+    print_warning "Frontend dependencies not installed. Installing now..."
+    cd frontend
+    npm install
+    cd ..
+fi
 
+# Check if .env file exists in backend
+if [ ! -f "backend/.env" ]; then
+    print_warning "Backend .env file not found. Creating default configuration..."
+    cd backend
+    echo "DATABASE_URL=\"file:./dev.db\"" > .env
+    echo "PORT=5001" >> .env
+    cd ..
+fi
+
+# Check if .env file exists in frontend
+if [ ! -f "frontend/.env" ]; then
+    print_warning "Frontend .env file not found. Creating default configuration..."
+    cd frontend
+    echo "REACT_APP_API_URL=http://localhost:5001/api" > .env
+    cd ..
+fi
+
+# Generate Prisma client if needed
 cd backend
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    print_status "Installing backend dependencies..."
-    npm install
-    print_success "Backend dependencies installed"
-else
-    print_status "Backend dependencies already installed"
+if [ ! -d "node_modules/.prisma" ]; then
+    print_info "Generating Prisma client..."
+    npx prisma generate
 fi
 
-# Create .env file if it doesn't exist
-if [ ! -f ".env" ]; then
-    print_status "Creating backend environment file..."
-    cat > .env << EOF
-DATABASE_URL="postgresql://postgres@localhost:5432/sat_practice_db"
-PORT=5001
-NODE_ENV=development
-EOF
-    print_success "Environment file created"
-fi
-
-# Generate Prisma client
-print_status "Generating Prisma client..."
-npm run db:generate
-
-# Push database schema
-print_status "Setting up database schema..."
-npm run db:push
-
-# Seed database if it's empty
-QUESTION_COUNT=$(psql -d sat_practice_db -t -c "SELECT COUNT(*) FROM questions;" | xargs)
-if [ "$QUESTION_COUNT" -eq 0 ]; then
-    print_status "Seeding database with questions..."
-    npm run db:seed
-    print_success "Database seeded with questions"
-else
-    print_status "Database already contains $QUESTION_COUNT questions"
-fi
-
-# Start backend server in background
-print_status "Starting backend server..."
-npm run dev > ../backend.log 2>&1 &
-BACKEND_PID=$!
-echo $BACKEND_PID > ../backend.pid
-
-# Wait for backend to start
-print_status "Waiting for backend to start..."
-sleep 5
-
-# Test backend
-if curl -s http://localhost:5001/api/health > /dev/null; then
-    print_success "Backend is running on http://localhost:5001"
-else
-    print_error "Backend failed to start. Check backend.log for details."
-    exit 1
+# Check if database exists, if not create it
+if [ ! -f "dev.db" ]; then
+    print_info "Creating SQLite database..."
+    npx prisma db push
 fi
 
 cd ..
 
-# Frontend setup
-print_status "Setting up frontend..."
-
-cd frontend
-
-# Install dependencies if node_modules doesn't exist
-if [ ! -d "node_modules" ]; then
-    print_status "Installing frontend dependencies..."
-    npm install
-    print_success "Frontend dependencies installed"
-else
-    print_status "Frontend dependencies already installed"
-fi
-
-# Start frontend server in background
-print_status "Starting frontend server..."
-npm start > ../frontend.log 2>&1 &
-FRONTEND_PID=$!
-echo $FRONTEND_PID > ../frontend.pid
-
-cd ..
-
-# Wait for frontend to start
-print_status "Waiting for frontend to start..."
-sleep 10
-
-# Test frontend
-if curl -s http://localhost:3000 > /dev/null; then
-    print_success "Frontend is running on http://localhost:3000"
-else
-    print_warning "Frontend may still be starting up..."
-fi
-
-# Create a stop script
-cat > stop.sh << 'EOF'
-#!/bin/bash
-echo "🛑 Stopping SAT Practice Platform..."
-
-# Kill processes by PID if files exist
-if [ -f "backend.pid" ]; then
-    kill $(cat backend.pid) 2>/dev/null || true
-    rm backend.pid
-fi
-
-if [ -f "frontend.pid" ]; then
-    kill $(cat frontend.pid) 2>/dev/null || true
-    rm frontend.pid
-fi
-
-# Kill any remaining processes
-pkill -f "react-scripts" 2>/dev/null || true
-pkill -f "nodemon" 2>/dev/null || true
-pkill -f "node.*app.js" 2>/dev/null || true
-
-# Kill processes on ports
-lsof -ti:3000 | xargs kill -9 2>/dev/null || true
-lsof -ti:5001 | xargs kill -9 2>/dev/null || true
-
-echo "✅ All processes stopped"
-EOF
-
-chmod +x stop.sh
-
-# Display final status
-echo ""
-echo "🎉 SAT Practice Platform is now running!"
-echo "========================================"
-echo ""
-echo "📱 Frontend: http://localhost:3000"
-echo "🔧 Backend API: http://localhost:5001"
-echo ""
-echo "📊 Database: PostgreSQL (sat_practice_db)"
-echo "📝 Questions loaded: $QUESTION_COUNT"
-echo ""
-echo "🛑 To stop the platform, run: ./stop.sh"
-echo ""
-echo "📋 Useful commands:"
-echo "   - View backend logs: tail -f backend.log"
-echo "   - View frontend logs: tail -f frontend.log"
-echo "   - Restart backend: cd backend && npm run dev"
-echo "   - Restart frontend: cd frontend && npm start"
-echo ""
-echo "🔍 Troubleshooting:"
-echo "   - If frontend shows errors, check the browser console (F12)"
-echo "   - If backend fails, check backend.log"
-echo "   - If database issues, run: cd backend && npm run db:push"
-echo ""
-
-# Function to handle cleanup on script exit
+# Function to cleanup background processes
 cleanup() {
-    echo ""
-    print_status "Cleaning up..."
-    ./stop.sh
+    print_info "Shutting down servers..."
+    kill $BACKEND_PID $FRONTEND_PID 2>/dev/null
     exit 0
 }
 
 # Set up signal handlers
 trap cleanup SIGINT SIGTERM
 
-print_success "Platform is ready! Open http://localhost:3000 in your browser."
-echo ""
-echo "Press Ctrl+C to stop all services..."
+# Start backend server
+print_info "Starting backend server..."
+cd backend
+npm start &
+BACKEND_PID=$!
+cd ..
 
-# Keep the script running
-while true; do
-    sleep 1
-done 
+# Wait a moment for backend to start
+sleep 2
+
+# Check if backend is running
+if ! curl -s http://localhost:5001/api/health > /dev/null; then
+    print_warning "Backend might still be starting up..."
+    sleep 3
+fi
+
+# Start frontend server
+print_info "Starting frontend server..."
+cd frontend
+npm start &
+FRONTEND_PID=$!
+cd ..
+
+# Wait for servers to start
+sleep 3
+
+# Check if servers are running
+if curl -s http://localhost:5001/api/health > /dev/null; then
+    print_success "Backend server is running on http://localhost:5001"
+else
+    print_error "Backend server failed to start"
+fi
+
+if curl -s http://localhost:3000 > /dev/null; then
+    print_success "Frontend server is running on http://localhost:3000"
+else
+    print_warning "Frontend server might still be starting up..."
+fi
+
+echo ""
+echo "🎉 SAT Practice App is starting up!"
+echo ""
+echo "📊 Server Status:"
+echo "   Backend:  http://localhost:5001"
+echo "   Frontend: http://localhost:3000"
+echo "   Database: SQLite (dev.db)"
+echo ""
+echo "📝 Next steps:"
+echo "   1. Wait for both servers to fully start"
+echo "   2. Open http://localhost:3000 in your browser"
+echo "   3. If you need to seed the database, run: cd backend && npm run db:seed"
+echo ""
+echo "🛑 Press Ctrl+C to stop all servers"
+
+# Wait for background processes
+wait 

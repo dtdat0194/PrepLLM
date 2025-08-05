@@ -1,149 +1,203 @@
 @echo off
-echo ========================================
-echo SAT Practice Platform - Troubleshooting
-echo ========================================
+echo 🚀 SAT Practice App - Troubleshooting Tool
+echo ==========================================
 echo.
 
-echo This script will help diagnose common issues with the SAT Practice Platform.
+REM Colors for output
+set "RED=[91m"
+set "GREEN=[92m"
+set "YELLOW=[93m"
+set "BLUE=[94m"
+set "NC=[0m"
+
+echo %BLUE%ℹ️  Running diagnostics for SAT Practice App...%NC%
 echo.
 
-echo Checking system status...
-echo.
-
-REM Check if Node.js processes are running
-echo Checking for Node.js processes...
-tasklist | findstr node.exe >nul
-if errorlevel 1 (
-    echo [INFO] No Node.js processes are currently running.
+REM Check Node.js
+echo %BLUE%ℹ️  Checking Node.js...%NC%
+node --version >nul 2>&1
+if %errorlevel% equ 0 (
+    for /f "tokens=3" %%a in ('node --version') do set NODE_VERSION=%%a
+    echo %GREEN%✅ Node.js version: !NODE_VERSION!%NC%
 ) else (
-    echo [RUNNING] Node.js processes found:
-    tasklist | findstr node.exe
+    echo %RED%❌ Node.js is not installed or not in PATH%NC%
+    echo Solution: Install Node.js from https://nodejs.org/
+    echo.
 )
 
-echo.
-
-REM Check ports
-echo Checking if ports are in use...
-echo.
-
-echo Checking port 3000 (Frontend)...
-netstat -ano | findstr :3000 >nul
-if errorlevel 1 (
-    echo [FREE] Port 3000 is available.
+REM Check npm
+echo %BLUE%ℹ️  Checking npm...%NC%
+npm --version >nul 2>&1
+if %errorlevel% equ 0 (
+    for /f "tokens=1" %%a in ('npm --version') do set NPM_VERSION=%%a
+    echo %GREEN%✅ npm version: !NPM_VERSION!%NC%
 ) else (
-    echo [IN USE] Port 3000 is being used by:
-    netstat -ano | findstr :3000
+    echo %RED%❌ npm is not installed or not in PATH%NC%
+    echo Solution: Reinstall Node.js (npm comes with it)
+    echo.
 )
 
-echo.
-
-echo Checking port 5001 (Backend)...
-netstat -ano | findstr :5001 >nul
-if errorlevel 1 (
-    echo [FREE] Port 5001 is available.
+REM Check if backend directory exists
+echo %BLUE%ℹ️  Checking project structure...%NC%
+if exist "backend" (
+    echo %GREEN%✅ Backend directory found%NC%
 ) else (
-    echo [IN USE] Port 5001 is being used by:
-    netstat -ano | findstr :5001
+    echo %RED%❌ Backend directory not found%NC%
+    echo Solution: Make sure you're in the sat-practice-app directory
+    echo.
 )
 
-echo.
-
-REM Check PostgreSQL service
-echo Checking PostgreSQL service...
-sc query postgresql >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] PostgreSQL service not found.
+if exist "frontend" (
+    echo %GREEN%✅ Frontend directory found%NC%
 ) else (
-    sc query postgresql | findstr STATE
+    echo %RED%❌ Frontend directory not found%NC%
+    echo Solution: Make sure you're in the sat-practice-app directory
+    echo.
 )
 
-echo.
-
-REM Check if database exists
-echo Checking database connection...
-psql -U postgres -c "SELECT 1;" >nul 2>&1
-if errorlevel 1 (
-    echo [ERROR] Cannot connect to PostgreSQL.
-    echo Make sure PostgreSQL is running and accessible.
+REM Check if .env files exist
+echo %BLUE%ℹ️  Checking configuration files...%NC%
+if exist "backend\.env" (
+    echo %GREEN%✅ Backend .env file found%NC%
 ) else (
-    echo [SUCCESS] PostgreSQL connection successful.
-    
-    REM Check if our database exists
-    psql -U postgres -c "SELECT 1 FROM pg_database WHERE datname='sat_practice_db';" | findstr 1 >nul
-    if errorlevel 1 (
-        echo [MISSING] Database 'sat_practice_db' does not exist.
-    ) else (
-        echo [FOUND] Database 'sat_practice_db' exists.
-        
-        REM Check question count
-        for /f "tokens=1" %%a in ('psql -U postgres -d sat_practice_db -t -c "SELECT COUNT(*) FROM questions;" 2^>nul') do set QUESTION_COUNT=%%a
-        if !QUESTION_COUNT!==0 (
-            echo [EMPTY] Database has no questions.
-        ) else (
-            echo [LOADED] Database has !QUESTION_COUNT! questions.
-        )
+    echo %YELLOW%⚠️  Backend .env file not found%NC%
+    echo Solution: Will be created automatically when you run start.bat
+    echo.
+)
+
+if exist "frontend\.env" (
+    echo %GREEN%✅ Frontend .env file found%NC%
+) else (
+    echo %YELLOW%⚠️  Frontend .env file not found%NC%
+    echo Solution: Will be created automatically when you run start.bat
+    echo.
+)
+
+REM Check database file
+echo %BLUE%ℹ️  Checking SQLite database...%NC%
+if exist "backend\dev.db" (
+    echo %GREEN%✅ SQLite database file found%NC%
+    for %%A in ("backend\dev.db") do set DB_SIZE=%%~zA
+    echo Database size: !DB_SIZE! bytes
+) else (
+    echo %YELLOW%⚠️  SQLite database file not found%NC%
+    echo Solution: Will be created automatically when you run start.bat
+    echo.
+)
+
+REM Check port usage
+echo %BLUE%ℹ️  Checking port availability...%NC%
+netstat -ano | findstr :3000 >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %RED%❌ Port 3000 is in use%NC%
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :3000') do (
+        echo Process ID: %%a
+        tasklist /fi "PID eq %%a" 2>nul
     )
-)
-
-echo.
-
-REM Check log files
-echo Checking log files...
-echo.
-
-if exist "backend.log" (
-    echo [FOUND] backend.log exists.
-    echo Last 5 lines of backend.log:
-    powershell "Get-Content backend.log -Tail 5"
+    echo Solution: Close the application using port 3000 or kill the process
+    echo.
 ) else (
-    echo [MISSING] backend.log not found.
+    echo %GREEN%✅ Port 3000 is available%NC%
 )
 
-echo.
-
-if exist "frontend.log" (
-    echo [FOUND] frontend.log exists.
-    echo Last 5 lines of frontend.log:
-    powershell "Get-Content frontend.log -Tail 5"
+netstat -ano | findstr :5001 >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %RED%❌ Port 5001 is in use%NC%
+    for /f "tokens=5" %%a in ('netstat -ano ^| findstr :5001') do (
+        echo Process ID: %%a
+        tasklist /fi "PID eq %%a" 2>nul
+    )
+    echo Solution: Close the application using port 5001 or kill the process
+    echo.
 ) else (
-    echo [MISSING] frontend.log not found.
+    echo %GREEN%✅ Port 5001 is available%NC%
 )
 
-echo.
+REM Check Node.js processes
+echo %BLUE%ℹ️  Checking Node.js processes...%NC%
+tasklist /fi "IMAGENAME eq node.exe" 2>nul | findstr node.exe >nul
+if %errorlevel% equ 0 (
+    echo %YELLOW%⚠️  Node.js processes are running%NC%
+    tasklist /fi "IMAGENAME eq node.exe"
+    echo.
+    echo To stop all Node.js processes, run:
+    echo   taskkill /f /im node.exe
+    echo.
+) else (
+    echo %GREEN%✅ No Node.js processes running%NC%
+)
 
-REM Check if curl is available
-echo Checking curl availability...
+REM Check if curl is available for health checks
+echo %BLUE%ℹ️  Checking curl availability...%NC%
 curl --version >nul 2>&1
-if errorlevel 1 (
-    echo [MISSING] curl is not available. Windows 10+ should have it by default.
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ curl is available for health checks%NC%
 ) else (
-    echo [FOUND] curl is available.
+    echo %YELLOW%⚠️  curl is not available%NC%
+    echo This is used for health checks but is not required.
+    echo Windows 10 and later should have curl built-in.
+    echo.
+)
+
+REM Test backend if it's running
+echo %BLUE%ℹ️  Testing backend connection...%NC%
+curl -s http://localhost:5001/api/health >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ Backend is responding%NC%
+) else (
+    echo %YELLOW%⚠️  Backend is not responding%NC%
+    echo This is normal if the backend is not running.
+    echo.
+)
+
+REM Test frontend if it's running
+echo %BLUE%ℹ️  Testing frontend connection...%NC%
+curl -s http://localhost:3000 >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ Frontend is responding%NC%
+) else (
+    echo %YELLOW%⚠️  Frontend is not responding%NC%
+    echo This is normal if the frontend is not running.
+    echo.
 )
 
 echo.
-
-echo ========================================
-echo Troubleshooting Complete
-echo ========================================
+echo %BLUE%ℹ️  Summary and Recommendations:%NC%
 echo.
 
-echo Common solutions:
+REM Provide recommendations based on findings
+node --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %RED%❌ Install Node.js from https://nodejs.org/%NC%
+)
+
+npm --version >nul 2>&1
+if %errorlevel% neq 0 (
+    echo %RED%❌ Reinstall Node.js (npm comes with it)%NC%
+)
+
+if not exist "backend" (
+    echo %RED%❌ Make sure you're in the sat-practice-app directory%NC%
+)
+
+netstat -ano | findstr ":3000\|:5001" >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %YELLOW%⚠️  Close applications using ports 3000 or 5001%NC%
+)
+
 echo.
-echo 1. If ports are in use:
-echo    - Kill the processes using: taskkill /f /pid [PID]
-echo.
-echo 2. If PostgreSQL is not running:
-echo    - Start it from Services (services.msc)
-echo    - Or run: net start postgresql
-echo.
-echo 3. If database issues:
-echo    - Run: cd backend ^& npm run db:push
-echo    - Then: cd backend ^& npm run db:seed
-echo.
-echo 4. If Node.js issues:
-echo    - Kill all Node processes: taskkill /f /im node.exe
-echo    - Restart the platform: start.bat
+echo %BLUE%ℹ️  Quick fixes:%NC%
+echo 1. If Node.js is missing: Install from https://nodejs.org/
+echo 2. If ports are in use: Close other applications or restart computer
+echo 3. If database issues: Delete backend/dev.db and run start.bat again
+echo 4. If permission issues: Run Command Prompt as Administrator
+echo 5. If PATH issues: Restart computer after installing Node.js
 echo.
 
-echo Press any key to exit...
-pause >nul 
+echo %BLUE%ℹ️  Next steps:%NC%
+echo 1. Fix any issues listed above
+echo 2. Run start.bat to start the application
+echo 3. If problems persist, check the browser console (F12)
+echo.
+
+pause 

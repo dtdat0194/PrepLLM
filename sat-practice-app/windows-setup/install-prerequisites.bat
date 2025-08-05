@@ -1,100 +1,124 @@
 @echo off
-echo ========================================
-echo SAT Practice Platform - Prerequisites
-echo ========================================
+echo 🚀 SAT Practice App - Prerequisites Checker
+echo ===========================================
 echo.
 
-echo This script will help you install the required software for the SAT Practice Platform.
-echo.
+REM Colors for output
+set "RED=[91m"
+set "GREEN=[92m"
+set "YELLOW=[93m"
+set "BLUE=[94m"
+set "NC=[0m"
 
-echo Checking current installations...
+echo %BLUE%ℹ️  Checking prerequisites for SAT Practice App...%NC%
 echo.
 
 REM Check Node.js
 echo Checking Node.js...
 node --version >nul 2>&1
-if errorlevel 1 (
-    echo [MISSING] Node.js is not installed.
+if %errorlevel% equ 0 (
+    for /f "tokens=3" %%a in ('node --version') do set NODE_VERSION=%%a
+    echo %GREEN%[FOUND] Node.js version: !NODE_VERSION!%NC%
+) else (
+    echo %RED%[MISSING] Node.js is not installed.%NC%
     echo.
     echo Please install Node.js:
     echo 1. Go to https://nodejs.org/
     echo 2. Download the LTS version
     echo 3. Run the installer
     echo 4. Make sure to check "Add to PATH" during installation
+    echo 5. Restart your computer after installation
     echo.
-    pause
-) else (
-    echo [FOUND] Node.js is installed.
-    node --version
 )
-
-echo.
 
 REM Check npm
 echo Checking npm...
 npm --version >nul 2>&1
-if errorlevel 1 (
-    echo [MISSING] npm is not installed.
-    echo Please install Node.js (npm comes with it).
+if %errorlevel% equ 0 (
+    for /f "tokens=1" %%a in ('npm --version') do set NPM_VERSION=%%a
+    echo %GREEN%[FOUND] npm version: !NPM_VERSION!%NC%
 ) else (
-    echo [FOUND] npm is installed.
-    npm --version
-)
-
-echo.
-
-REM Check PostgreSQL
-echo Checking PostgreSQL...
-psql --version >nul 2>&1
-if errorlevel 1 (
-    echo [MISSING] PostgreSQL is not installed.
+    echo %RED%[MISSING] npm is not installed.%NC%
+    echo npm should come with Node.js installation.
+    echo Try reinstalling Node.js and restarting your computer.
     echo.
-    echo Please install PostgreSQL:
-    echo 1. Go to https://www.postgresql.org/download/windows/
-    echo 2. Download the latest version
-    echo 3. Run the installer
-    echo 4. Remember the password you set for the postgres user
-    echo 5. Make sure to add PostgreSQL to your PATH
-    echo.
-    pause
-) else (
-    echo [FOUND] PostgreSQL is installed.
-    psql --version
 )
-
-echo.
 
 REM Check Git
 echo Checking Git...
 git --version >nul 2>&1
-if errorlevel 1 (
-    echo [MISSING] Git is not installed.
-    echo.
-    echo Please install Git:
-    echo 1. Go to https://git-scm.com/download/win
-    echo 2. Download and run the installer
-    echo 3. Use default settings
-    echo.
-    pause
+if %errorlevel% equ 0 (
+    for /f "tokens=3" %%a in ('git --version') do set GIT_VERSION=%%a
+    echo %GREEN%[FOUND] Git version: !GIT_VERSION!%NC%
 ) else (
-    echo [FOUND] Git is installed.
-    git --version
+    echo %YELLOW%[MISSING] Git is not installed.%NC%
+    echo Git is recommended for cloning the repository.
+    echo Download from: https://git-scm.com/
+    echo.
+)
+
+REM Check curl (for health checks)
+echo Checking curl...
+curl --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%[FOUND] curl is available%NC%
+) else (
+    echo %YELLOW%[MISSING] curl is not available%NC%
+    echo curl is used for health checks but is not required.
+    echo Windows 10 and later should have curl built-in.
+    echo.
 )
 
 echo.
-echo ========================================
-echo Prerequisites Check Complete
-echo ========================================
+echo %BLUE%ℹ️  Summary:%NC%
 echo.
 
-echo If all items show [FOUND], you're ready to run the platform!
-echo If any show [MISSING], please install them first.
+REM Summary
+node --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ Node.js: Ready%NC%
+) else (
+    echo %RED%❌ Node.js: Missing%NC%
+)
+
+npm --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ npm: Ready%NC%
+) else (
+    echo %RED%❌ npm: Missing%NC%
+)
+
+git --version >nul 2>&1
+if %errorlevel% equ 0 (
+    echo %GREEN%✅ Git: Ready%NC%
+) else (
+    echo %YELLOW%⚠️  Git: Missing (optional)%NC%
+)
+
+echo.
+echo %BLUE%ℹ️  Database Information:%NC%
+echo This app uses SQLite, which requires no additional installation.
+echo The database file will be created automatically when you run the app.
 echo.
 
-echo To start the platform after installing prerequisites:
-echo 1. Clone the repository: git clone https://github.com/dtdat0194/PrepLLM.git
-echo 2. Navigate to the folder: cd PrepLLM
-echo 3. Run the startup script: start.bat
+if %errorlevel% equ 0 (
+    echo %GREEN%🎉 All required prerequisites are satisfied!%NC%
+    echo.
+    echo You can now run the application with:
+    echo   start.bat
+    echo.
+) else (
+    echo %RED%❌ Some prerequisites are missing.%NC%
+    echo.
+    echo Please install the missing components and try again.
+    echo.
+)
+
+echo %BLUE%ℹ️  Next steps:%NC%
+echo 1. If all prerequisites are satisfied, run: start.bat
+echo 2. If you need to install Node.js, visit: https://nodejs.org/
+echo 3. After installation, restart your computer
+echo 4. Run this script again to verify installation
 echo.
 
 pause 

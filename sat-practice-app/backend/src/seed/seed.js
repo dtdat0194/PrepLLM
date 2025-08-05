@@ -30,6 +30,10 @@ async function main() {
           continue; // Skip if already exists
         }
         
+        // Convert arrays to JSON strings for SQLite
+        const choicesJson = JSON.stringify(questionData.question.choices || []);
+        const correctAnswerJson = JSON.stringify(questionData.question.correct_answer || []);
+        
         // Create question with new structure
         const question = await prisma.question.create({
           data: {
@@ -42,8 +46,8 @@ async function main() {
             type: questionData.type,
             paragraph: questionData.question.paragraph,
             questionText: questionData.question.question,
-            choices: questionData.question.choices || [],
-            correctAnswer: questionData.question.correct_answer || [],
+            choices: choicesJson,
+            correctAnswer: correctAnswerJson,
             explanation: questionData.question.explanation,
             visualType: questionData.visuals.type,
             svgContent: questionData.visuals.svg_content,
