@@ -1,45 +1,119 @@
 # SAT Practice Platform
 
-A full-stack SAT practice platform built with React, Node.js, Express, and PostgreSQL.
+A comprehensive full-stack SAT practice platform built with React, Node.js, Express, and PostgreSQL. Features advanced question filtering, LaTeX math rendering, and a modern responsive interface.
 
-## Features
+## 🚀 Quick Start
 
-- **Question Viewer**: Browse through SAT questions one at a time
-- **Advanced Filtering**: Filter by subject, skill, and difficulty
-- **Math Rendering**: LaTeX math equations rendered with KaTeX
-- **Responsive Design**: Modern UI with Tailwind CSS
-- **Database Integration**: PostgreSQL with Prisma ORM
-- **RESTful API**: Complete backend API for question management
+**One-command startup for the entire platform:**
 
-## Tech Stack
+```bash
+# Navigate to the project directory
+cd sat-practice-app
+
+# Run the complete startup script
+./start.sh
+```
+
+This will automatically:
+- ✅ Check prerequisites (Node.js, npm, PostgreSQL)
+- ✅ Set up the database and seed with questions
+- ✅ Install dependencies for both backend and frontend
+- ✅ Start both servers
+- ✅ Provide health checks and status information
+
+**To stop the platform:**
+```bash
+./stop.sh
+```
+
+## ✨ Features
+
+- **📚 Question Viewer**: Browse through SAT questions one at a time with navigation
+- **🔍 Advanced Filtering**: Filter by subject, skill, difficulty, and question type
+- **🧮 Math Rendering**: LaTeX math equations rendered with KaTeX
+- **📱 Responsive Design**: Modern UI with Tailwind CSS
+- **🗄️ Database Integration**: PostgreSQL with Prisma ORM
+- **🔧 RESTful API**: Complete backend API for question management
+- **📊 Pagination**: Efficient question loading with pagination
+- **🎯 Question Types**: Support for multiple-choice and grid-in questions
+- **💡 Explanations**: Detailed explanations for each question
+
+## 🛠️ Tech Stack
 
 ### Backend
-- Node.js with Express.js
-- PostgreSQL database
-- Prisma ORM
-- RESTful API design
+- **Node.js** with Express.js
+- **PostgreSQL** database
+- **Prisma ORM** for database management
+- **RESTful API** design
+- **CORS** enabled for frontend communication
 
 ### Frontend
-- React.js
-- Tailwind CSS for styling
-- KaTeX for math rendering
-- React Router for navigation
-- Axios for API communication
+- **React.js** with hooks
+- **Tailwind CSS** for styling
+- **KaTeX** for math rendering
+- **React Router** for navigation
+- **Axios** for API communication
 
-## Prerequisites
+## 📋 Prerequisites
 
-- Node.js (v14 or higher)
-- PostgreSQL database
-- npm or yarn
+- **Node.js** (v14 or higher)
+- **PostgreSQL** database (running)
+- **npm** or yarn
+- **Git** (for cloning)
 
-## Setup Instructions
+## 🏗️ Project Structure
+
+```
+sat-practice-app/
+├── 📁 backend/
+│   ├── 📁 src/
+│   │   ├── 📁 routes/          # API route definitions
+│   │   │   ├── questionRoutes.js
+│   │   │   ├── skillRoutes.js
+│   │   │   └── moduleRoutes.js
+│   │   ├── 📁 controllers/     # Request handlers
+│   │   │   ├── questionController.js
+│   │   │   ├── skillController.js
+│   │   │   └── moduleController.js
+│   │   ├── 📁 models/          # Database models
+│   │   │   └── prisma.js
+│   │   ├── 📁 seed/           # Database seeding
+│   │   │   └── seed.js
+│   │   └── app.js             # Express app setup
+│   ├── 📁 prisma/
+│   │   └── schema.prisma      # Database schema
+│   ├── package.json
+│   └── .env                   # Environment variables
+├── 📁 frontend/
+│   ├── 📁 src/
+│   │   ├── 📁 components/     # React components
+│   │   │   ├── QuestionViewer.js
+│   │   │   └── FilterPanel.js
+│   │   ├── 📁 pages/          # Page components
+│   │   │   └── PracticePage.js
+│   │   ├── 📁 api/           # API service
+│   │   │   └── api.js
+│   │   ├── App.js            # Main app component
+│   │   └── index.css         # Global styles
+│   ├── package.json
+│   └── tailwind.config.js    # Tailwind configuration
+├── 📄 cb-digital-questions.json  # Question data source
+├── 📄 start.sh               # Complete startup script
+├── 📄 stop.sh                # Shutdown script
+├── 📄 setup.sh               # Initial setup script
+├── 📄 package.json           # Root package.json
+└── 📄 README.md              # This file
+```
+
+## 🔧 Manual Setup (Alternative)
+
+If you prefer manual setup or need to troubleshoot:
 
 ### 1. Database Setup
 
-First, create a PostgreSQL database:
-
-```sql
-CREATE DATABASE sat_practice_db;
+```bash
+# Create PostgreSQL database
+createdb sat_practice_db
 ```
 
 ### 2. Backend Setup
@@ -50,11 +124,12 @@ cd backend
 # Install dependencies
 npm install
 
-# Set up environment variables
-# Create a .env file with:
-DATABASE_URL="postgresql://username:password@localhost:5432/sat_practice_db"
-PORT=5000
+# Create environment file
+cat > .env << EOF
+DATABASE_URL="postgresql://postgres@localhost:5432/sat_practice_db"
+PORT=5001
 NODE_ENV=development
+EOF
 
 # Generate Prisma client
 npm run db:generate
@@ -81,7 +156,7 @@ npm install
 npm start
 ```
 
-## API Endpoints
+## 🌐 API Endpoints
 
 ### Questions
 - `GET /api/questions` - Get questions with optional filters
@@ -98,7 +173,7 @@ npm start
 ### Health Check
 - `GET /api/health` - API health status
 
-## Database Schema
+## 🗄️ Database Schema
 
 ### Questions Table
 - `id` - Primary key
@@ -106,7 +181,7 @@ npm start
 - `program` - Program name (e.g., "SAT")
 - `module` - Subject module (e.g., "math", "reading")
 - `skillDesc` - Skill description
-- `difficulty` - Question difficulty (E, M, H)
+- `difficulty` - Question difficulty (1-3)
 - `stem` - Question content (HTML)
 - `rationale` - Explanation (HTML)
 - `correctAnswer` - Array of correct answers
@@ -125,69 +200,121 @@ npm start
 ### Modules Table
 - `name` - Module name
 
-## Usage
+## 🎯 Usage Guide
 
-1. **Load Questions**: Click "Load Questions" to populate the database with questions from the JSON file
-2. **Filter Questions**: Use the filter panel to select by subject, skill, or difficulty
-3. **Navigate Questions**: Use Previous/Next buttons to browse through questions
-4. **View Explanations**: Click "Show Explanation" to see detailed explanations
-5. **Answer Questions**: Select multiple choice options or enter grid-in answers
+### 1. **Start the Platform**
+```bash
+./start.sh
+```
 
-## Development
+### 2. **Access the Application**
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:5001
+
+### 3. **Using the Platform**
+- **Filter Questions**: Use the filter panel to select by subject, skill, or difficulty
+- **Navigate Questions**: Use Previous/Next buttons or click on question numbers
+- **View Explanations**: Click "Show Explanation" to see detailed explanations
+- **Answer Questions**: Select multiple choice options or enter grid-in answers
+
+## 🔍 Development Commands
 
 ### Backend Development
 ```bash
 cd backend
-npm run dev  # Start with nodemon for auto-reload
-```
-
-### Frontend Development
-```bash
-cd frontend
-npm start  # Start React development server
-```
-
-### Database Management
-```bash
-cd backend
+npm run dev          # Start with nodemon for auto-reload
 npm run db:generate  # Generate Prisma client
 npm run db:push      # Push schema changes
 npm run db:seed      # Seed database
 ```
 
-## Project Structure
-
-```
-sat-practice-app/
-├── backend/
-│   ├── src/
-│   │   ├── routes/          # API routes
-│   │   ├── controllers/     # Request handlers
-│   │   ├── models/          # Database models
-│   │   ├── seed/           # Database seeding
-│   │   └── app.js          # Express app
-│   ├── prisma/
-│   │   └── schema.prisma   # Database schema
-│   └── package.json
-├── frontend/
-│   ├── src/
-│   │   ├── components/     # React components
-│   │   ├── pages/          # Page components
-│   │   ├── api/           # API service
-│   │   └── App.js         # Main app component
-│   └── package.json
-├── cb-digital-questions.json  # Question data
-└── README.md
+### Frontend Development
+```bash
+cd frontend
+npm start            # Start React development server
+npm run build        # Build for production
 ```
 
-## Contributing
+### Root Level Commands
+```bash
+npm run dev          # Start both frontend and backend
+npm run backend      # Start only backend
+npm run frontend     # Start only frontend
+```
+
+## 🐛 Troubleshooting
+
+### Common Issues
+
+**1. Port Conflicts**
+```bash
+# Check what's using the ports
+lsof -i :3000
+lsof -i :5001
+
+# Kill processes if needed
+kill -9 <PID>
+```
+
+**2. Database Issues**
+```bash
+cd backend
+npm run db:push      # Reset database schema
+npm run db:seed      # Re-seed database
+```
+
+**3. Frontend Build Issues**
+```bash
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+**4. Backend Issues**
+```bash
+cd backend
+rm -rf node_modules package-lock.json
+npm install
+npm run db:generate
+```
+
+### Log Files
+- Backend logs: `backend.log`
+- Frontend logs: `frontend.log`
+
+### View Logs
+```bash
+tail -f backend.log   # View backend logs
+tail -f frontend.log  # View frontend logs
+```
+
+## 📊 Data Source
+
+The platform uses the `cb-digital-questions.json` file containing:
+- **24MB** of SAT question data
+- **Multiple question types** (multiple-choice, grid-in)
+- **Rich content** with HTML and LaTeX math
+- **Comprehensive metadata** (skills, modules, difficulty levels)
+
+## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
-## License
+## 📝 License
 
-This project is licensed under the MIT License. 
+This project is licensed under the MIT License.
+
+## 🙏 Acknowledgments
+
+- **College Board** for the question data
+- **KaTeX** for math rendering
+- **Tailwind CSS** for styling
+- **Prisma** for database management
+
+---
+
+**Happy SAT Practice! 🎓** 
