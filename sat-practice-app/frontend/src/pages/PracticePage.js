@@ -45,6 +45,16 @@ const PracticePage = () => {
     loadQuestions();
   }, [loadQuestions]);
 
+  // Reset global index when questions are loaded or page changes
+  useEffect(() => {
+    if (questions.length > 0) {
+      const expectedGlobalIndex = (pagination.page - 1) * pagination.limit + currentIndex;
+      if (globalQuestionIndex !== expectedGlobalIndex) {
+        setGlobalQuestionIndex(expectedGlobalIndex);
+      }
+    }
+  }, [questions, pagination.page, currentIndex, globalQuestionIndex, pagination.limit]);
+
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
     setCurrentIndex(0);
@@ -163,7 +173,12 @@ const PracticePage = () => {
                     return (
                       <button
                         key={question.id}
-                        onClick={() => setCurrentIndex(index)}
+                        onClick={() => {
+                          setCurrentIndex(index);
+                          // Update global index when clicking on sidebar questions
+                          const newGlobalIndex = (pagination.page - 1) * pagination.limit + index;
+                          setGlobalQuestionIndex(newGlobalIndex);
+                        }}
                         className={`w-full text-left p-3 rounded-lg border transition-colors ${
                           index === currentIndex
                             ? 'border-blue-500 bg-blue-50 text-blue-800'
