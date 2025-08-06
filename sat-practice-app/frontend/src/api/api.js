@@ -11,10 +11,14 @@ export const questionsAPI = {
     if (params.skill) queryParams.append('skill', params.skill);
     if (params.difficulty) queryParams.append('difficulty', params.difficulty);
     if (params.type) queryParams.append('type', params.type);
+    if (params.questionId) queryParams.append('questionId', params.questionId);
     if (params.page) queryParams.append('page', params.page);
     if (params.limit) queryParams.append('limit', params.limit);
     
-    const response = await fetch(`${API_BASE_URL}/questions?${queryParams}`);
+    const url = `${API_BASE_URL}/questions?${queryParams}`;
+    console.log('API call URL:', url);
+    
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error('Failed to fetch questions');
     }

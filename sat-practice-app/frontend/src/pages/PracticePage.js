@@ -28,7 +28,9 @@ const PracticePage = () => {
         limit: pagination.limit
       };
       
+      console.log('Loading questions with params:', params);
       const response = await questionsAPI.getQuestions(params);
+      console.log('API response:', response);
       setQuestions(response.questions);
       setPagination(response.pagination);
     } catch (error) {

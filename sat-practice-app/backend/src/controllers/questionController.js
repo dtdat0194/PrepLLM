@@ -3,7 +3,7 @@ const prisma = require('../models/prisma');
 // Get questions with optional filters
 const getQuestions = async (req, res) => {
   try {
-    const { section, domain, skill, difficulty, type, page = 1, limit = 10 } = req.query;
+    const { section, domain, skill, difficulty, type, questionId, page = 1, limit = 10 } = req.query;
     
     const where = {};
     
@@ -30,8 +30,14 @@ const getQuestions = async (req, res) => {
       where.type = type;
     }
     
+    if (questionId) {
+      where.questionId = questionId;
+      console.log('Filtering by questionId:', questionId);
+    }
+    
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
+    console.log('Database query where clause:', where);
     const questions = await prisma.question.findMany({
       where,
       skip,
@@ -40,6 +46,7 @@ const getQuestions = async (req, res) => {
         createdAt: 'desc'
       }
     });
+    console.log(`Found ${questions.length} questions`);
     
     // Parse JSON strings back to arrays for frontend
     const processedQuestions = questions.map(question => ({
@@ -161,7 +168,9 @@ const bulkLoadQuestions = async (req, res) => {
     const fs = require('fs');
     const path = require('path');
     
-    const jsonPath = path.join(__dirname, '../../../cleaned_questions_full.json');
+    const jsonPath = path.join(__dirname, '../../data/cleaned_questions_full.json');
+    console.log('JSON file path:', jsonPath);
+    console.log('File exists:', fs.existsSync(jsonPath));
     const questionsData = JSON.parse(fs.readFileSync(jsonPath, 'utf8'));
     
     let processed = 0;

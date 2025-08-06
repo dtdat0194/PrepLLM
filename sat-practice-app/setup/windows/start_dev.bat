@@ -17,6 +17,21 @@ set "NC=[0m"
 REM Function to print colored output
 call :print_success "Initializing development environment..."
 
+REM Change to the sat-practice-app root directory
+cd /d "%~dp0..\.."
+echo %BLUE%Working directory: %CD%%NC%
+
+REM Activate conda environment first
+echo %BLUE%Activating conda environment...%NC%
+call conda activate sat_env
+if %errorlevel% neq 0 (
+    echo %RED%Failed to activate sat_env conda environment.%NC%
+    echo Please ensure the sat_env environment exists: conda create -n sat_env python=3.9
+    pause
+    exit /b 1
+)
+echo %GREEN%Conda environment sat_env activated successfully%NC%
+
 REM Check if Node.js is installed
 node --version >nul 2>&1
 if %errorlevel% neq 0 (
@@ -29,7 +44,7 @@ if %errorlevel% neq 0 (
 echo %GREEN%Node.js is installed%NC%
 
 REM Check if npm is installed
-npm --version >nul 2>&1
+call npm --version >nul 2>&1
 if %errorlevel% neq 0 (
     echo %RED%npm is not installed. Please install npm first.%NC%
     pause
@@ -39,7 +54,7 @@ if %errorlevel% neq 0 (
 echo %GREEN%npm is installed%NC%
 
 REM Check if conda is available
-conda --version >nul 2>&1
+call conda --version >nul 2>&1
 if %errorlevel% equ 0 (
     echo %GREEN%Conda is available%NC%
     set "USE_CONDA=1"
@@ -57,44 +72,44 @@ REM Install dependencies if needed
 echo %BLUE%Checking and installing dependencies...%NC%
 
 REM Install backend dependencies
-if not exist "..\backend\node_modules" (
+if not exist "backend\node_modules" (
     echo %YELLOW%Installing backend dependencies...%NC%
-    cd ..\backend
+    cd backend
     call npm install
-    cd ..\setup\windows
+    cd ..
 )
 
 REM Install frontend dependencies
-if not exist "..\frontend\node_modules" (
+if not exist "frontend\node_modules" (
     echo %YELLOW%Installing frontend dependencies...%NC%
-    cd ..\frontend
+    cd frontend
     call npm install
-    cd ..\setup\windows
+    cd ..
 )
 
 REM Set up environment files
 echo %BLUE%Setting up environment configuration...%NC%
 
 REM Backend .env
-if not exist "..\backend\.env" (
+if not exist "backend\.env" (
     echo %YELLOW%Creating backend .env file...%NC%
-    cd ..\backend
+    cd backend
     echo DATABASE_URL=file:./dev.db > .env
     echo PORT=5001 >> .env
-    cd ..\setup\windows
+    cd ..
 )
 
 REM Frontend .env
-if not exist "..\frontend\.env" (
+if not exist "frontend\.env" (
     echo %YELLOW%Creating frontend .env file...%NC%
-    cd ..\frontend
+    cd frontend
     echo REACT_APP_API_URL=http://localhost:5001/api > .env
-    cd ..\setup\windows
+    cd ..
 )
 
 REM Set up database
 echo %BLUE%Setting up database...%NC%
-cd ..\backend
+cd backend
 
 REM Generate Prisma client
 if not exist "node_modules\.prisma" (
@@ -112,13 +127,13 @@ REM Process and seed questions if needed
 if not exist "cleaned_questions_full.json" (
     echo %YELLOW%Processing question data...%NC%
     cd ..
-    if "%USE_CONDA%"=="1" (
-        call conda activate sat_env
-        call python data\convertJSON.py
-    ) else (
-        call python data\convertJSON.py
-    )
-    copy data\cleaned_questions_full.json backend\cleaned_questions_full.json >nul
+    call python data\convertJSON.py
+    copy data\cleaned_questions_full.json cleaned_questions_full.json >nul
+    cd backend
+) else (
+    echo %YELLOW%Copying existing question data...%NC%
+    cd ..
+    copy data\cleaned_questions_full.json cleaned_questions_full.json >nul
     cd backend
 )
 
@@ -126,13 +141,13 @@ REM Seed database if empty
 echo %YELLOW%Seeding database with questions...%NC%
 call npm run db:seed
 
-cd ..\setup\windows
+cd ..
 
 REM Start backend server
 echo %BLUE%Starting backend server...%NC%
-cd ..\backend
-start "SAT Backend" cmd /c "npm start"
-cd ..\setup\windows
+cd backend
+start "SAT Backend" cmd /c "conda activate sat_env && npm start"
+cd ..
 
 REM Wait for backend to start
 echo %BLUE%Waiting for backend to start...%NC%
@@ -149,9 +164,9 @@ if %errorlevel% equ 0 (
 
 REM Start frontend server
 echo %BLUE%Starting frontend server...%NC%
-cd ..\frontend
-start "SAT Frontend" cmd /c "npm start"
-cd ..\setup\windows
+cd frontend
+start "SAT Frontend" cmd /c "conda activate sat_env && npm start"
+cd ..
 
 REM Wait for frontend to start
 echo %BLUE%Waiting for frontend to start...%NC%
