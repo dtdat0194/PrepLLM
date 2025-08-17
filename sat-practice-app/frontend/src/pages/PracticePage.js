@@ -32,7 +32,14 @@ const PracticePage = () => {
       const response = await questionsAPI.getQuestions(params);
       console.log('API response:', response);
       setQuestions(response.questions);
-      setPagination(response.pagination);
+      
+      // Update pagination with response data
+      setPagination({
+        page: response.page,
+        limit: response.limit,
+        total: response.total,
+        pages: Math.ceil(response.total / response.limit)
+      });
     } catch (error) {
       console.error('Error loading questions:', error);
       setError('Failed to load questions. Please try again.');
