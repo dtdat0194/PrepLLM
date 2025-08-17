@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/PrepLLM/static/css/main.2ee7bfc6.css",
-    "main.js": "/PrepLLM/static/js/main.2569d5c7.js",
+    "main.js": "/PrepLLM/static/js/main.b3a32e51.js",
     "static/js/453.670e15c7.chunk.js": "/PrepLLM/static/js/453.670e15c7.chunk.js",
     "static/media/KaTeX_AMS-Regular.ttf": "/PrepLLM/static/media/KaTeX_AMS-Regular.853be92419a6c3766b9a.ttf",
     "static/media/KaTeX_Main-Regular.ttf": "/PrepLLM/static/media/KaTeX_Main-Regular.9eba1d77abcf2aa6e94e.ttf",
@@ -65,11 +65,11 @@
     "static/media/KaTeX_Size3-Regular.woff2": "/PrepLLM/static/media/KaTeX_Size3-Regular.e1951519f6f0596f7356.woff2",
     "index.html": "/PrepLLM/index.html",
     "main.2ee7bfc6.css.map": "/PrepLLM/static/css/main.2ee7bfc6.css.map",
-    "main.2569d5c7.js.map": "/PrepLLM/static/js/main.2569d5c7.js.map",
+    "main.b3a32e51.js.map": "/PrepLLM/static/js/main.b3a32e51.js.map",
     "453.670e15c7.chunk.js.map": "/PrepLLM/static/js/453.670e15c7.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.2ee7bfc6.css",
-    "static/js/main.2569d5c7.js"
+    "static/js/main.b3a32e51.js"
   ]
 }
