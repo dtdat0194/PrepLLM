@@ -5,9 +5,12 @@ const loadQuestions = async () => {
   if (questionsCache) return questionsCache;
   
   try {
-    const response = await fetch('/questions.json');
+    // Use process.env.PUBLIC_URL to handle GitHub Pages subdirectory
+    const questionsUrl = `${process.env.PUBLIC_URL || ''}/questions.json`;
+    console.log('Loading questions from:', questionsUrl);
+    const response = await fetch(questionsUrl);
     if (!response.ok) {
-      throw new Error('Failed to load questions data');
+      throw new Error(`Failed to load questions data: ${response.status} ${response.statusText}`);
     }
     questionsCache = await response.json();
     console.log(`Loaded ${questionsCache.length} questions from static JSON`);
