@@ -1,0 +1,14 @@
+{
+  "name": "sat-practice-app",
+  "version": "1.0.0",
+  "description": "SAT Practice Application",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build",
+    "build:backend": "cd backend && npm install && npx prisma generate",
+    "seed": "cd backend && npm run db:seed",
+    "start": "cd backend && npm start"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

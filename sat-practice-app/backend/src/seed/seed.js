@@ -30,7 +30,7 @@ async function main() {
           continue; // Skip if already exists
         }
         
-        // Convert arrays to JSON strings for SQLite
+        // Convert arrays to JSON strings for database storage
         const choicesJson = JSON.stringify(questionData.question.choices || []);
         const correctAnswerJson = JSON.stringify(questionData.question.correct_answer || []);
         

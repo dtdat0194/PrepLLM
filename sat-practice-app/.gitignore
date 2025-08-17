@@ -54,6 +54,11 @@ jspm_packages/
 *.swp
 *.swo
 
+# Database files
+*.db
+*.db-journal
+dev.db*
+
 # OS generated files
 .DS_Store
 .DS_Store?

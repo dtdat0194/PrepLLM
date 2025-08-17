@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
@@ -21,15 +21,15 @@ model Question {
   type          String   // "multiple-choice" or "grid-in"
   
   // Question content
-  paragraph     String?  // SQLite doesn't need @db.Text
-  questionText  String   // SQLite doesn't need @db.Text
-  choices       String   // SQLite stores arrays as JSON strings
-  correctAnswer String   // SQLite stores arrays as JSON strings
-  explanation   String?  // SQLite doesn't need @db.Text
+  paragraph     String?  @db.Text
+  questionText  String   @db.Text
+  choices       String   @db.Text // JSON strings
+  correctAnswer String   @db.Text // JSON strings
+  explanation   String?  @db.Text
   
   // Visual content
   visualType    String?
-  svgContent    String?  // SQLite doesn't need @db.Text
+  svgContent    String?  @db.Text
   imageUrl      String?
   
   createdAt     DateTime @default(now())
