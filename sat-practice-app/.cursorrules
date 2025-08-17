@@ -1,0 +1,87 @@
+# SAT Practice App - Cursor Rules
+
+## Project Overview
+This is a full-stack SAT practice platform with React frontend, Node.js/Express backend, and SQLite database. The app provides 2000+ SAT questions with advanced filtering, LaTeX math rendering, and responsive design.
+
+## Architecture
+- **Frontend**: React 19 + Tailwind CSS + KaTeX (LaTeX rendering)
+- **Backend**: Node.js + Express + Prisma ORM
+- **Database**: SQLite (file-based, no server required)
+- **Data Processing**: Python scripts for question transformation
+
+## Key File Locations
+- Main app: `frontend/src/App.js`
+- Backend server: `backend/src/app.js`
+- Database schema: `backend/prisma/schema.prisma`
+- Data processing: `data/convertJSON.py`
+- Setup scripts: `setup/windows/` and `setup/unix/`
+
+## Development Workflow
+1. Use `setup/windows/start_dev.bat` (Windows) or `setup/unix/start.sh` (Unix) to start development
+2. Backend runs on port 5001, frontend on port 3000
+3. Database file: `backend/dev.db`
+4. API base URL: `http://localhost:5001/api`
+
+## Code Conventions
+- **Frontend**: Use functional components with hooks, Tailwind CSS classes
+- **Backend**: Express routes with Prisma for database operations
+- **Database**: Single Question model with JSON string storage for arrays
+- **API**: RESTful endpoints with standardized response format
+- **Error Handling**: Try-catch blocks with proper error responses
+
+## Important Dependencies
+- **Frontend**: React 19, Tailwind CSS, KaTeX, Axios
+- **Backend**: Express, Prisma, SQLite, CORS
+- **Development**: Nodemon for backend, React Scripts for frontend
+
+## Database Schema
+The Question model includes: questionId, section, domain, skill, difficulty, type, paragraph, questionText, choices (JSON), correctAnswer (JSON), explanation, visualType, svgContent, imageUrl.
+
+## API Endpoints
+- GET /api/health - Health check
+- GET /api/questions - Get questions with filters
+- GET /api/questions/:id - Get single question
+- GET /api/questions/filters - Get available filters
+
+## Common Tasks
+- Adding new questions: Update data files, run convertJSON.py, seed database
+- Modifying UI: Edit React components in frontend/src/
+- API changes: Modify backend/src/routes/ and controllers/
+- Database changes: Update prisma/schema.prisma, run db:push
+
+## Environment Setup
+- Backend .env: DATABASE_URL="file:./dev.db", PORT=5001
+- Frontend .env: REACT_APP_API_URL=http://localhost:5001/api
+
+## Troubleshooting
+- Database issues: Delete backend/dev.db, run db:push, db:seed
+- Port conflicts: Use stop_dev scripts, then restart
+- Dependencies: npm install in both backend and frontend directories
+
+## Performance Notes
+- SQLite with Prisma ORM for simple, file-based database
+- React with Tailwind for fast, responsive UI
+- KaTeX for efficient math rendering
+- Pagination implemented for large question sets
+
+## Security Considerations
+- Input validation on all API endpoints
+- CORS properly configured
+- SQL injection prevented by Prisma ORM
+- Environment variables for sensitive configuration
+
+## Future Enhancements
+- User authentication with JWT
+- Progress tracking and analytics
+- Question bookmarking
+- Practice sessions with timers
+- Mobile app with React Native
+
+When working on this project:
+1. Always consider the full-stack nature (frontend + backend + database)
+2. Use the existing setup scripts for development
+3. Follow the established API patterns and response formats
+4. Test both frontend and backend when making changes
+5. Consider the SQLite database limitations and JSON string storage
+6. Maintain the LaTeX math rendering functionality
+7. Keep the responsive design and Tailwind CSS styling consistent 
