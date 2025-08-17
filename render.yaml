@@ -3,7 +3,6 @@ services:
   - type: web
     name: sat-practice-backend
     env: node
-    plan: free
     buildCommand: cd sat-practice-app/backend && npm install && npx prisma generate && npx prisma db push && npm run db:seed
     startCommand: cd sat-practice-app/backend && npm start
     envVars:
@@ -15,10 +14,8 @@ services:
           property: connectionString
 
   # Frontend Static Site
-  - type: web
+  - type: static
     name: sat-practice-frontend
-    env: static
-    plan: free
     buildCommand: cd sat-practice-app/frontend && npm install && npm run build
     staticPublishPath: sat-practice-app/frontend/build
     envVars:
@@ -27,4 +24,3 @@ services:
 
 databases:
   - name: sat-practice-db
-    plan: free
