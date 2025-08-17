@@ -1,90 +1,135 @@
-const API_BASE_URL = 'http://localhost:5001/api';
+// Static JSON data loader
+let questionsCache = null;
 
-// Questions API
+const loadQuestions = async () => {
+  if (questionsCache) return questionsCache;
+  
+  try {
+    const response = await fetch('/questions.json');
+    if (!response.ok) {
+      throw new Error('Failed to load questions data');
+    }
+    questionsCache = await response.json();
+    console.log(`Loaded ${questionsCache.length} questions from static JSON`);
+    return questionsCache;
+  } catch (error) {
+    console.error('Error loading questions:', error);
+    throw error;
+  }
+};
+
+// Questions API - Static version
 export const questionsAPI = {
   // Get questions with optional filters
   getQuestions: async (params = {}) => {
-    const queryParams = new URLSearchParams();
+    const allQuestions = await loadQuestions();
+    let filteredQuestions = [...allQuestions];
     
-    if (params.section) queryParams.append('section', params.section);
-    if (params.domain) queryParams.append('domain', params.domain);
-    if (params.skill) queryParams.append('skill', params.skill);
-    if (params.difficulty) queryParams.append('difficulty', params.difficulty);
-    if (params.type) queryParams.append('type', params.type);
-    if (params.questionId) queryParams.append('questionId', params.questionId);
-    if (params.page) queryParams.append('page', params.page);
-    if (params.limit) queryParams.append('limit', params.limit);
-    
-    const url = `${API_BASE_URL}/questions?${queryParams}`;
-    console.log('API call URL:', url);
-    
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error('Failed to fetch questions');
+    // Apply filters
+    if (params.section) {
+      filteredQuestions = filteredQuestions.filter(q => q.section === params.section);
     }
-    return response.json();
+    if (params.domain) {
+      filteredQuestions = filteredQuestions.filter(q => q.domain === params.domain);
+    }
+    if (params.skill) {
+      filteredQuestions = filteredQuestions.filter(q => q.skill === params.skill);
+    }
+    if (params.difficulty) {
+      filteredQuestions = filteredQuestions.filter(q => q.difficulty === parseInt(params.difficulty));
+    }
+    if (params.type) {
+      filteredQuestions = filteredQuestions.filter(q => q.type === params.type);
+    }
+    if (params.questionId) {
+      filteredQuestions = filteredQuestions.filter(q => q.id === params.questionId);
+    }
+    
+    // Apply pagination
+    const limit = parseInt(params.limit) || 50;
+    const offset = parseInt(params.offset) || 0;
+    const page = parseInt(params.page) || 1;
+    const startIndex = offset || ((page - 1) * limit);
+    const endIndex = startIndex + limit;
+    
+    const paginatedQuestions = filteredQuestions.slice(startIndex, endIndex);
+    
+    console.log(`Filtered ${filteredQuestions.length} questions, returning ${paginatedQuestions.length}`);
+    
+    return {
+      questions: paginatedQuestions,
+      total: filteredQuestions.length,
+      limit: limit,
+      offset: startIndex,
+      page: page
+    };
   },
 
   // Get single question by ID
   getQuestionById: async (id) => {
-    const response = await fetch(`${API_BASE_URL}/questions/${id}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch question');
+    const allQuestions = await loadQuestions();
+    const question = allQuestions.find(q => q.id === id);
+    
+    if (!question) {
+      throw new Error('Question not found');
     }
-    return response.json();
+    
+    return { question };
   },
 
   // Get single question by questionId
   getQuestionByQuestionId: async (questionId) => {
-    const response = await fetch(`${API_BASE_URL}/questions/by-question-id/${questionId}`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch question');
+    const allQuestions = await loadQuestions();
+    const question = allQuestions.find(q => q.id === questionId);
+    
+    if (!question) {
+      throw new Error('Question not found');
     }
-    return response.json();
+    
+    return { question };
   },
 
   // Get available filters
   getFilters: async () => {
-    const response = await fetch(`${API_BASE_URL}/questions/filters`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch filters');
-    }
-    return response.json();
+    const allQuestions = await loadQuestions();
+    
+    const sections = [...new Set(allQuestions.map(q => q.section))].filter(Boolean);
+    const domains = [...new Set(allQuestions.map(q => q.domain))].filter(Boolean);
+    const skills = [...new Set(allQuestions.map(q => q.skill))].filter(Boolean);
+    const difficulties = [...new Set(allQuestions.map(q => q.difficulty))].filter(Boolean).sort((a, b) => a - b);
+    const types = [...new Set(allQuestions.map(q => q.type))].filter(Boolean);
+    
+    return {
+      sections,
+      domains,
+      skills,
+      difficulties,
+      types
+    };
   },
 
-  // Bulk load questions
+  // Bulk load questions (already loaded)
   bulkLoadQuestions: async () => {
-    const response = await fetch(`${API_BASE_URL}/questions/bulk-load`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
-    if (!response.ok) {
-      throw new Error('Failed to bulk load questions');
-    }
-    return response.json();
+    const questions = await loadQuestions();
+    return { 
+      message: 'Questions loaded successfully',
+      count: questions.length
+    };
   }
 };
 
-// Skills API (if needed for backward compatibility)
+// Skills API (static version)
 export const skillsAPI = {
   getSkills: async () => {
-    const response = await fetch(`${API_BASE_URL}/skills`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch skills');
-    }
-    return response.json();
+    const filters = await questionsAPI.getFilters();
+    return filters.skills.map(skill => ({ name: skill }));
   }
 };
 
-// Modules API (if needed for backward compatibility)
+// Modules API (static version)
 export const modulesAPI = {
   getModules: async () => {
-    const response = await fetch(`${API_BASE_URL}/modules`);
-    if (!response.ok) {
-      throw new Error('Failed to fetch modules');
-    }
-    return response.json();
+    const filters = await questionsAPI.getFilters();
+    return filters.domains.map(domain => ({ name: domain }));
   }
 }; 
