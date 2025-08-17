@@ -1,14 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import FilterPanel from '../components/FilterPanel';
 import QuestionViewer from '../components/QuestionViewer';
+import QuestionList from '../components/QuestionList';
 import { questionsAPI } from '../api/api';
 
 const PracticePage = () => {
   const [questions, setQuestions] = useState([]);
+  const [allQuestions, setAllQuestions] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [filters, setFilters] = useState({});
+  const [viewMode, setViewMode] = useState('single'); // 'single' or 'list'
   const [pagination, setPagination] = useState({
     page: 1,
     limit: 10,
@@ -22,31 +25,54 @@ const PracticePage = () => {
       setLoading(true);
       setError(null);
       
-      const params = {
-        ...filters,
-        page: pagination.page,
-        limit: pagination.limit
-      };
-      
-      console.log('Loading questions with params:', params);
-      const response = await questionsAPI.getQuestions(params);
-      console.log('API response:', response);
-      setQuestions(response.questions);
-      
-      // Update pagination with response data
-      setPagination({
-        page: response.page,
-        limit: response.limit,
-        total: response.total,
-        pages: Math.ceil(response.total / response.limit)
-      });
+      if (viewMode === 'list') {
+        // Load all filtered questions without pagination for list view
+        const params = {
+          ...filters,
+          limit: 10000 // Large number to get all questions
+        };
+        
+        console.log('Loading all questions for list view with params:', params);
+        const response = await questionsAPI.getQuestions(params);
+        console.log('API response:', response);
+        setAllQuestions(response.questions);
+        setQuestions(response.questions);
+        
+        // Update pagination info for display
+        setPagination({
+          page: 1,
+          limit: response.questions.length,
+          total: response.total,
+          pages: 1
+        });
+      } else {
+        // Load paginated questions for single view
+        const params = {
+          ...filters,
+          page: pagination.page,
+          limit: pagination.limit
+        };
+        
+        console.log('Loading questions with params:', params);
+        const response = await questionsAPI.getQuestions(params);
+        console.log('API response:', response);
+        setQuestions(response.questions);
+        
+        // Update pagination with response data
+        setPagination({
+          page: response.page,
+          limit: response.limit,
+          total: response.total,
+          pages: Math.ceil(response.total / response.limit)
+        });
+      }
     } catch (error) {
       console.error('Error loading questions:', error);
       setError('Failed to load questions. Please try again.');
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination.page, pagination.limit]);
+  }, [filters, pagination.page, pagination.limit, viewMode]);
 
   useEffect(() => {
     loadQuestions();
@@ -64,6 +90,13 @@ const PracticePage = () => {
 
   const handleFiltersChange = (newFilters) => {
     setFilters(newFilters);
+    setCurrentIndex(0);
+    setGlobalQuestionIndex(0);
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const handleViewModeChange = (newViewMode) => {
+    setViewMode(newViewMode);
     setCurrentIndex(0);
     setGlobalQuestionIndex(0);
     setPagination(prev => ({ ...prev, page: 1 }));
@@ -152,110 +185,140 @@ const PracticePage = () => {
         {/* Filters */}
         <FilterPanel 
           onFiltersChange={handleFiltersChange}
+          onViewModeChange={handleViewModeChange}
+          viewMode={viewMode}
           currentQuestionIndex={getCurrentQuestionNumber() - 1}
           totalQuestions={pagination.total}
         />
 
         {/* Questions Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Question List */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-lg shadow p-4">
-              <h3 className="text-lg font-medium text-gray-800 mb-4">Questions</h3>
-              
-              {loading ? (
-                <div className="space-y-2">
-                  {[...Array(5)].map((_, i) => (
-                    <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
-                  ))}
-                </div>
-              ) : questions.length === 0 ? (
-                <div className="text-center text-gray-500 py-8">
-                  No questions found with the current filters.
-                </div>
-              ) : (
-                <div className="space-y-2 max-h-96 overflow-y-auto">
-                  {questions.map((question, index) => {
-                    const globalQuestionNumber = (pagination.page - 1) * pagination.limit + index + 1;
-                    return (
-                      <button
-                        key={question.id}
-                        onClick={() => {
-                          setCurrentIndex(index);
-                          // Update global index when clicking on sidebar questions
-                          const newGlobalIndex = (pagination.page - 1) * pagination.limit + index;
-                          setGlobalQuestionIndex(newGlobalIndex);
-                        }}
-                        className={`w-full text-left p-3 rounded-lg border transition-colors ${
-                          index === currentIndex
-                            ? 'border-blue-500 bg-blue-50 text-blue-800'
-                            : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
-                        }`}
-                      >
-                        <div className="text-sm font-medium">
-                          Question {globalQuestionNumber}
-                        </div>
-                        <div className="text-xs text-gray-500 mt-1">
-                          {question.section} • {question.domain}
-                        </div>
-                        <div className="text-xs text-gray-400 mt-1">
-                          {question.type === 'multiple-choice' ? 'Multiple Choice' : 'Grid-In'}
-                        </div>
-                      </button>
-                    );
-                  })}
+        {viewMode === 'single' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Question List */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-lg shadow p-4">
+                <h3 className="text-lg font-medium text-gray-800 mb-4">Questions</h3>
+                
+                {loading ? (
+                  <div className="space-y-2">
+                    {[...Array(5)].map((_, i) => (
+                      <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+                    ))}
+                  </div>
+                ) : questions.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">
+                    No questions found with the current filters.
+                  </div>
+                ) : (
+                  <div className="space-y-2 max-h-96 overflow-y-auto">
+                    {questions.map((question, index) => {
+                      const globalQuestionNumber = (pagination.page - 1) * pagination.limit + index + 1;
+                      return (
+                        <button
+                          key={question.id}
+                          onClick={() => {
+                            setCurrentIndex(index);
+                            // Update global index when clicking on sidebar questions
+                            const newGlobalIndex = (pagination.page - 1) * pagination.limit + index;
+                            setGlobalQuestionIndex(newGlobalIndex);
+                          }}
+                          className={`w-full text-left p-3 rounded-lg border transition-colors ${
+                            index === currentIndex
+                              ? 'border-blue-500 bg-blue-50 text-blue-800'
+                              : 'border-gray-200 hover:border-gray-300 hover:bg-gray-50'
+                          }`}
+                        >
+                          <div className="text-sm font-medium">
+                            Question {globalQuestionNumber}
+                          </div>
+                          <div className="text-xs text-gray-500 mt-1">
+                            {question.section} • {question.domain}
+                          </div>
+                          <div className="text-xs text-gray-400 mt-1">
+                            {question.type === 'multiple-choice' ? 'Multiple Choice' : 'Grid-In'}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Pagination */}
+              {pagination.pages > 1 && (
+                <div className="mt-4 bg-white rounded-lg shadow p-4">
+                  <div className="flex justify-between items-center">
+                    <button
+                      onClick={() => handlePageChange(pagination.page - 1)}
+                      disabled={pagination.page === 1}
+                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Previous
+                    </button>
+                    
+                    <span className="text-sm text-gray-600">
+                      Page {pagination.page} of {pagination.pages}
+                    </span>
+                    
+                    <button
+                      onClick={() => handlePageChange(pagination.page + 1)}
+                      disabled={pagination.page === pagination.pages}
+                      className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      Next
+                    </button>
+                  </div>
                 </div>
               )}
             </div>
 
-            {/* Pagination */}
-            {pagination.pages > 1 && (
-              <div className="mt-4 bg-white rounded-lg shadow p-4">
-                <div className="flex justify-between items-center">
-                  <button
-                    onClick={() => handlePageChange(pagination.page - 1)}
-                    disabled={pagination.page === 1}
-                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Previous
-                  </button>
-                  
-                  <span className="text-sm text-gray-600">
-                    Page {pagination.page} of {pagination.pages}
-                  </span>
-                  
-                  <button
-                    onClick={() => handlePageChange(pagination.page + 1)}
-                    disabled={pagination.page === pagination.pages}
-                    className="px-3 py-1 text-sm text-gray-600 hover:text-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    Next
-                  </button>
+            {/* Question Viewer */}
+            <div className="lg:col-span-3">
+              {questions.length > 0 ? (
+                <QuestionViewer
+                  questions={questions}
+                  currentIndex={currentIndex}
+                  onNavigate={handleNavigate}
+                  onAnswerChange={handleAnswerChange}
+                  globalQuestionNumber={getCurrentQuestionNumber()}
+                  totalQuestions={pagination.total}
+                />
+              ) : (
+                <div className="bg-white p-8 rounded-lg shadow text-center">
+                  <div className="text-gray-500">
+                    {loading ? 'Loading questions...' : 'No questions available'}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
-
-          {/* Question Viewer */}
-          <div className="lg:col-span-3">
-            {questions.length > 0 ? (
-              <QuestionViewer
-                questions={questions}
-                currentIndex={currentIndex}
-                onNavigate={handleNavigate}
-                onAnswerChange={handleAnswerChange}
-                globalQuestionNumber={getCurrentQuestionNumber()}
-                totalQuestions={pagination.total}
-              />
+        ) : (
+          /* List View */
+          <div className="max-w-4xl mx-auto">
+            {loading ? (
+              <div className="space-y-6">
+                {[...Array(3)].map((_, i) => (
+                  <div key={i} className="bg-white p-6 rounded-lg shadow">
+                    <div className="animate-pulse">
+                      <div className="h-4 bg-gray-200 rounded mb-4"></div>
+                      <div className="h-32 bg-gray-200 rounded mb-4"></div>
+                      <div className="space-y-2">
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                        <div className="h-8 bg-gray-200 rounded"></div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
             ) : (
-              <div className="bg-white p-8 rounded-lg shadow text-center">
-                <div className="text-gray-500">
-                  {loading ? 'Loading questions...' : 'No questions available'}
-                </div>
-              </div>
+              <QuestionList
+                questions={questions}
+                onAnswerChange={handleAnswerChange}
+              />
             )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

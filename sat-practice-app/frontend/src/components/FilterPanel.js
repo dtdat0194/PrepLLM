@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { questionsAPI } from '../api/api';
 
-const FilterPanel = ({ onFiltersChange, currentQuestionIndex = 0, totalQuestions = 0 }) => {
+const FilterPanel = ({ onFiltersChange, onViewModeChange, currentQuestionIndex = 0, totalQuestions = 0, viewMode = 'single' }) => {
   const [filters, setFilters] = useState({
     section: '',
     domain: '',
@@ -83,13 +83,50 @@ const FilterPanel = ({ onFiltersChange, currentQuestionIndex = 0, totalQuestions
       <div className="flex justify-between items-center mb-4">
         <h3 className="text-lg font-semibold text-gray-800">Filters</h3>
         <div className="flex items-center gap-3">
-          {/* Question Counter Box */}
-          <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
-            <div className="text-xs text-blue-600 font-medium">Question</div>
-            <div className="text-sm font-semibold text-blue-800">
-              {currentQuestionIndex + 1}/{totalQuestions}
-            </div>
+          {/* View Mode Toggle */}
+          <div className="flex items-center bg-gray-100 rounded-lg p-1">
+            <button
+              onClick={() => onViewModeChange && onViewModeChange('single')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'single'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              Single
+            </button>
+            <button
+              onClick={() => onViewModeChange && onViewModeChange('list')}
+              className={`px-3 py-1 text-sm font-medium rounded-md transition-colors ${
+                viewMode === 'list'
+                  ? 'bg-white text-gray-900 shadow-sm'
+                  : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              List
+            </button>
           </div>
+          
+          {/* Question Counter Box - only show in single mode */}
+          {viewMode === 'single' && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg px-3 py-2">
+              <div className="text-xs text-blue-600 font-medium">Question</div>
+              <div className="text-sm font-semibold text-blue-800">
+                {currentQuestionIndex + 1}/{totalQuestions}
+              </div>
+            </div>
+          )}
+          
+          {/* Total Questions Counter - show in list mode */}
+          {viewMode === 'list' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+              <div className="text-xs text-green-600 font-medium">Total Questions</div>
+              <div className="text-sm font-semibold text-green-800">
+                {totalQuestions}
+              </div>
+            </div>
+          )}
+          
           <button
             onClick={clearFilters}
             className="text-sm text-blue-600 hover:text-blue-800"
