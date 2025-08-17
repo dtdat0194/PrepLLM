@@ -12,8 +12,33 @@ const loadQuestions = async () => {
     if (!response.ok) {
       throw new Error(`Failed to load questions data: ${response.status} ${response.statusText}`);
     }
-    questionsCache = await response.json();
-    console.log(`Loaded ${questionsCache.length} questions from static JSON`);
+    const rawQuestions = await response.json();
+    
+    // Transform the data structure to match what the components expect
+    questionsCache = rawQuestions.map(q => ({
+      id: q.id,
+      questionId: q.id, // Use id as questionId
+      program: q.program,
+      section: q.section,
+      domain: q.domain,
+      skill: q.skill,
+      difficulty: q.difficulty,
+      type: q.type,
+      
+      // Flatten the nested question structure
+      paragraph: q.question?.paragraph,
+      questionText: q.question?.question,
+      choices: q.question?.choices ? (Array.isArray(q.question.choices) ? q.question.choices : JSON.parse(q.question.choices)) : [],
+      correctAnswer: q.question?.correct_answer ? (Array.isArray(q.question.correct_answer) ? q.question.correct_answer : JSON.parse(q.question.correct_answer)) : [],
+      explanation: q.question?.explanation,
+      
+      // Visual content
+      visualType: q.visuals?.type,
+      svgContent: q.visuals?.svg_content,
+      imageUrl: q.image_url
+    }));
+    
+    console.log(`Loaded and transformed ${questionsCache.length} questions from static JSON`);
     return questionsCache;
   } catch (error) {
     console.error('Error loading questions:', error);
